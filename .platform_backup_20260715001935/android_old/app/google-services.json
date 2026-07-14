@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "258795665699",
+    "firebase_url": "https://charming-mile-358508-default-rtdb.firebaseio.com",
+    "project_id": "charming-mile-358508",
+    "storage_bucket": "charming-mile-358508.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:258795665699:android:692fe2c2aaac4644adf496",
+        "android_client_info": {
+          "package_name": "com.example.reconnect"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "258795665699-jvkecnrrjba3do1iklao98q9af7j8pi6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.reconnect",
+            "certificate_hash": "d7341889d36854085d7787342c560e57232e4d8e"
+          }
+        },
+        {
+          "client_id": "258795665699-86kj8qfrdh9ulr7m79ljqr9en6k2tem3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAmFFS8WxwXeUh6BzXi2fUAiTVFsVlQt7k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "258795665699-86kj8qfrdh9ulr7m79ljqr9en6k2tem3.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
