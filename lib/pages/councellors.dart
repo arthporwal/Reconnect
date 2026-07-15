@@ -103,9 +103,9 @@ class _ExpertsState extends State<Experts> {
         ),
         centerTitle: true,
       ),
-      body: Padding(
-        padding: const EdgeInsets.fromLTRB(20.0, 15.0, 20.0, 15.0),
+      body: SafeArea(
         child: ListView.builder(
+            padding: const EdgeInsets.fromLTRB(20.0, 15.0, 20.0, 24.0),
             itemCount: users.length,
             itemBuilder: (context, index) {
               final User = users[index];
@@ -113,26 +113,37 @@ class _ExpertsState extends State<Experts> {
               return Card(
                 child: Padding(
                   padding: const EdgeInsets.all(10.0),
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      radius: 30,
-                      backgroundImage: NetworkImage(User.urlAvatar),
-                    ),
-                    title: Text(
-                      User.Username,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        color: Colors.blue,
-                        fontWeight: FontWeight.bold,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CircleAvatar(
+                        radius: 30,
+                        backgroundImage: NetworkImage(User.urlAvatar),
                       ),
-                    ),
-                    subtitle: Text(
-                      User.description,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              User.Username,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                color: Colors.blue,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              User.description.trim(),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    isThreeLine: true,
+                    ],
                   ),
                 ),
               );

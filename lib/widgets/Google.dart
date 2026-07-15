@@ -3,19 +3,22 @@ import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 class GoogleSignInProvider extends ChangeNotifier {
-  final googleSignIn = GoogleSignIn();
+  final GoogleSignIn googleSignIn = GoogleSignIn.instance;
+  bool _isInitialized = false;
 
   GoogleSignInAccount? _user;
 
   GoogleSignInAccount? get user => _user;
 
   Future<UserCredential?> googleLogin() async {
-    final googleUser = await googleSignIn.signIn();
-    if (googleUser == null) return null;
+    if (!_isInitialized) {
+      await googleSignIn.initialize();
+      _isInitialized = true;
+    }
+    final googleUser = await googleSignIn.authenticate();
     _user = googleUser;
-    final googleAuth = await googleUser.authentication;
+    final googleAuth = googleUser.authentication;
     final credential = GoogleAuthProvider.credential(
-      accessToken: googleAuth.accessToken,
       idToken: googleAuth.idToken,
     );
     final userCredential =

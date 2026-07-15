@@ -69,8 +69,8 @@ class _FeedState extends State<Feed> {
             padding: const EdgeInsets.symmetric(vertical: 8),
             itemCount: posts.length,
             itemBuilder: (context, i) {
-              final data = posts[i].data() as Map<String, dynamic>;
-              final creator = data['creator']?.toString().trim();
+              final post = posts[i];
+              final data = post.data() as Map<String, dynamic>;
               final text = data['text']?.toString() ?? '';
 
               return Container(
@@ -90,7 +90,7 @@ class _FeedState extends State<Feed> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(creator?.isNotEmpty == true ? creator! : 'User',
+                    const Text('Anonymous',
                         style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             color: Color.fromARGB(255, 5, 152, 172),
@@ -113,7 +113,8 @@ class _FeedState extends State<Feed> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) => const Comments()),
+                                  builder: (context) =>
+                                      Comments(postId: post.id)),
                             );
                           },
                           icon: const Icon(

@@ -1,8 +1,6 @@
-import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:path/path.dart';
 import 'dart:typed_data';
 
 class ButtonWidget extends StatelessWidget {
@@ -41,16 +39,6 @@ class ButtonWidget extends StatelessWidget {
 }
 
 class FirebaseApi {
-  static UploadTask? uploadFile(String destination, File file) {
-    try {
-      final ref = FirebaseStorage.instance.ref(destination);
-
-      return ref.putFile(file);
-    } on FirebaseException {
-      return null;
-    }
-  }
-
   static UploadTask? uploadBytes(String destination, Uint8List data) {
     try {
       final ref = FirebaseStorage.instance.ref(destination);
@@ -70,11 +58,11 @@ class Upload extends StatefulWidget {
 class _UploadState extends State<Upload> {
   final String title = 'Firebase Upload';
   UploadTask? task;
-  File? file;
+  PlatformFile? file;
 
   @override
   Widget build(BuildContext context) {
-    final fileName = file != null ? basename(file!.path) : 'No File Selected';
+    final fileName = file?.name ?? 'No File Selected';
 
     return Scaffold(
       appBar: AppBar(
@@ -112,21 +100,26 @@ class _UploadState extends State<Upload> {
   }
 
   Future selectFile() async {
-    final result = await FilePicker.platform.pickFiles(allowMultiple: false);
+    final result = await FilePicker.pickFiles(
+      allowMultiple: false,
+      withData: true,
+    );
 
     if (result == null) return;
-    final path = result.files.single.path!;
 
-    setState(() => file = File(path));
+    setState(() => file = result.files.single);
   }
 
   Future uploadFile() async {
     if (file == null) return;
 
-    final fileName = basename(file!.path);
-    final destination = 'files/$fileName';
+    final selectedFile = file;
+    final data = selectedFile?.bytes;
+    if (selectedFile == null || data == null) return;
 
-    task = FirebaseApi.uploadFile(destination, file!);
+    final destination = 'files/${selectedFile.name}';
+
+    task = FirebaseApi.uploadBytes(destination, data);
     setState(() {});
 
     if (task == null) return;

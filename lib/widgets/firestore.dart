@@ -49,50 +49,33 @@ class Anal {
 }
 
 class PostService {
-  List<PostModel> _postListFromSnapshot(QuerySnapshot snapshot) {
-    return snapshot.docs.map((doc) {
-      return PostModel(
-        id: doc.id,
-        creator: doc['creator'] ?? '',
-        text: doc['text'] ?? '',
-        timestamp: doc['timestamp'] ?? 0,
-      );
-    }).toList();
-  }
-
   Future savePost(String text) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
     await FirebaseFirestore.instance.collection("posts").add({
       'text': text,
-      'creator': user.displayName?.trim().isNotEmpty == true
-          ? user.displayName
-          : user.email ?? user.uid,
-      'creatorId': user.uid,
-      'creatorEmail': user.email,
       'timestamp': FieldValue.serverTimestamp(),
     });
   }
 
-  Stream<List<PostModel>> getPostsByUser(creator) {
+  Stream<QuerySnapshot<Map<String, dynamic>>> commentsForPost(String postId) {
     return FirebaseFirestore.instance
         .collection('posts')
-        .where('creator', isEqualTo: creator)
-        .snapshots()
-        .map(_postListFromSnapshot);
+        .doc(postId)
+        .collection('comments')
+        .orderBy('timestamp', descending: false)
+        .snapshots();
   }
-}
 
-class PostModel {
-  final String id;
-  final String creator;
-  final String text;
-  final Timestamp timestamp;
-
-  PostModel(
-      {required this.id,
-      required this.creator,
-      required this.text,
-      required this.timestamp});
+  Future<void> saveComment(String postId, String text) {
+    return FirebaseFirestore.instance
+        .collection('posts')
+        .doc(postId)
+        .collection('comments')
+        .add({
+      'text': text,
+      'timestamp': FieldValue.serverTimestamp(),
+    });
+  }
 }
