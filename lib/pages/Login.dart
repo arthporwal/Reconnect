@@ -4,6 +4,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:reconnect/widgets/Google.dart';
 import 'forgot_password.dart';
+import 'quizpage.dart';
 import 'signup.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'home.dart';
@@ -18,6 +19,9 @@ class LoginScreens extends StatefulWidget {
 
 class _LoginScreensState extends State<LoginScreens> {
   bool hide = true;
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
   static Future<User?> loginUsingEmailPasword(
       {required String email,
       required String password,
@@ -38,17 +42,20 @@ class _LoginScreensState extends State<LoginScreens> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    TextEditingController _emailController = TextEditingController();
-    TextEditingController _passwordController = TextEditingController();
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(10),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.start,
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(10),
           children: [
+            const SizedBox(height: 60),
             Text(
               "Reconnect",
               style: TextStyle(
@@ -126,6 +133,7 @@ class _LoginScreensState extends State<LoginScreens> {
                     SharedPreferences sharedPreferences =
                         await SharedPreferences.getInstance();
                     sharedPreferences.setString('email', _emailController.text);
+                    sharedPreferences.setString('uid', user.uid);
                     Fluttertoast.showToast(msg: 'Logged in');
                     print('Login Successful');
                     Navigator.of(context).pushReplacement(MaterialPageRoute(
@@ -145,20 +153,53 @@ class _LoginScreensState extends State<LoginScreens> {
             SizedBox(height: 20),
             Row(
               children: [
-                ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      alignment: Alignment.center,
-                      backgroundColor: const Color.fromARGB(255, 36, 182, 121),
-                      foregroundColor: Colors.white,
-                      minimumSize: const Size(340, 40),
-                    ),
-                    icon: FaIcon(FontAwesomeIcons.google),
-                    label: Text('Sign up with Google'),
-                    onPressed: () {
-                      var provider = Provider.of<GoogleSignInProvider>(context,
-                          listen: false);
-                      provider.googleLogin();
-                    })
+                Expanded(
+                  child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        alignment: Alignment.center,
+                        backgroundColor:
+                            const Color.fromARGB(255, 36, 182, 121),
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size.fromHeight(40),
+                      ),
+                      icon: FaIcon(FontAwesomeIcons.google),
+                      label: Text('Sign up with Google'),
+                      onPressed: () async {
+                        var provider = Provider.of<GoogleSignInProvider>(
+                            context,
+                            listen: false);
+                        try {
+                          final userCredential = await provider.googleLogin();
+                          final user = userCredential?.user;
+                          if (user == null) return;
+
+                          final sharedPreferences =
+                              await SharedPreferences.getInstance();
+                          await sharedPreferences.setString('uid', user.uid);
+                          if (user.email != null) {
+                            await sharedPreferences.setString(
+                                'email', user.email!);
+                          }
+
+                          Fluttertoast.showToast(msg: 'Logged in');
+                          final nextScreen =
+                              userCredential!.additionalUserInfo?.isNewUser ==
+                                      true
+                                  ? const QuizPage()
+                                  : const Home();
+                          Navigator.of(context).pushReplacement(
+                              MaterialPageRoute(builder: (_) => nextScreen));
+                        } on FirebaseAuthException catch (error) {
+                          Fluttertoast.showToast(
+                              msg: error.message ?? 'Google sign in failed');
+                        } catch (error) {
+                          Fluttertoast.showToast(
+                              msg:
+                                  'Google sign in failed. Check Firebase Google sign-in setup.');
+                          print('Google sign in failed: $error');
+                        }
+                      }),
+                )
               ],
             ),
           ],

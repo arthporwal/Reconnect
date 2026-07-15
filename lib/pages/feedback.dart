@@ -24,55 +24,50 @@ class _My_feedbackState extends State<My_feedback> {
           centerTitle: true,
           backgroundColor: Color.fromARGB(255, 58, 116, 98),
         ),
-        body: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-          const Center(
-            child: Text(
-              'How much did you like the App? \n \n',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w100,
-              ),
-            ),
-          ),
-          Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-            Center(
-              child: RatingBar.builder(
-                initialRating: ratingValue,
-                minRating: 1,
-                allowHalfRating: true,
-                itemCount: 5,
-                itemSize: 35,
-                itemBuilder: (context, _) => const Icon(
-                  Icons.star,
-                  color: Colors.amber,
-                ),
-                onRatingUpdate: (rating) {
-                  Fluttertoast.showToast(msg: 'Rated!');
-
-                  setState(() {
-                    ratingValue = rating;
-                    RatingGiven(rating);
-                  });
-
-                  Navigator.pop(context);
-                },
-              ),
-            ),
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Center(
-                  child: Text(
-                    '\n \n Rate us out of 5 :)',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w100,
-                    ),
+        body: ListView(
+            padding: const EdgeInsets.symmetric(vertical: 80),
+            children: [
+              const Center(
+                child: Text(
+                  'How much did you like the App? \n \n',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w100,
                   ),
-                )
-              ],
-            ),
-          ])
-        ]));
+                ),
+              ),
+              Center(
+                child: RatingBar.builder(
+                  initialRating: ratingValue,
+                  minRating: 1,
+                  allowHalfRating: true,
+                  itemCount: 5,
+                  itemSize: 35,
+                  itemBuilder: (context, _) => const Icon(
+                    Icons.star,
+                    color: Colors.amber,
+                  ),
+                  onRatingUpdate: (rating) {
+                    Fluttertoast.showToast(msg: 'Rated!');
+
+                    setState(() {
+                      ratingValue = rating;
+                      RatingGiven(rating);
+                    });
+
+                    Navigator.pop(context);
+                  },
+                ),
+              ),
+              const Center(
+                child: Text(
+                  '\n \n Rate us out of 5 :)',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w100,
+                  ),
+                ),
+              ),
+            ]));
   }
 }

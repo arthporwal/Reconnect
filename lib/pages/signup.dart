@@ -3,6 +3,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:reconnect/pages/quizpage.dart';
 import 'package:reconnect/widgets/firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Signup extends StatefulWidget {
   const Signup({Key? key}) : super(key: key);
@@ -29,11 +30,10 @@ class _SignupState extends State<Signup> {
         toolbarHeight: 65,
         title: const Text("RECONNECT"),
       ),
-      body: SingleChildScrollView(
-        child: Container(
+      body: SafeArea(
+        child: ListView(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 30),
-          child: Column(
-            children: [
+          children: [
               const Text(
                 "Welcome To Reconnect, \nLet's get started!",
                 style: TextStyle(
@@ -113,11 +113,16 @@ class _SignupState extends State<Signup> {
                     .createUserWithEmailAndPassword(
                         email: _emailTextEditingController.text,
                         password: _passwordTextEditingController.text)
-                    .then((value) {
+                    .then((value) async {
                   User? updateUser = FirebaseAuth.instance.currentUser;
                   // ignore: deprecated_member_use
                   updateUser!.updateProfile(
                       displayName: _usernameEditingController.text);
+                  final sharedPreferences =
+                      await SharedPreferences.getInstance();
+                  await sharedPreferences.setString('uid', updateUser.uid);
+                  await sharedPreferences.setString(
+                      'email', _emailTextEditingController.text);
                   userSetup(
                       int.parse(_phonenumberTextEditingController.text),
                       _usernameEditingController.text,
@@ -125,7 +130,7 @@ class _SignupState extends State<Signup> {
                       int.parse(_ageEditingController.text));
                   print("Created New Account");
                   Fluttertoast.showToast(msg: 'Account Created');
-                  Navigator.push(
+                  Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
                         builder: (context) => QuizPage(),
@@ -145,8 +150,7 @@ class _SignupState extends State<Signup> {
                   style: ElevatedButton.styleFrom(
                       backgroundColor: Color.fromARGB(255, 36, 182, 121)),
                   child: const Text("Already have an account?")),
-            ],
-          ),
+          ],
         ),
       ),
     );

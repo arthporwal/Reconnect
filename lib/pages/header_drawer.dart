@@ -1,8 +1,10 @@
-import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:reconnect/pages/Upload.dart';
+import 'package:provider/provider.dart';
+import 'package:reconnect/pages/Login.dart';
+import 'package:reconnect/widgets/Google.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/drawer_list.dart';
 import 'about_us.dart';
 import 'feedback.dart';
@@ -25,9 +27,9 @@ class HeaderDrawer extends StatelessWidget {
           end: Alignment.topRight,
         ),
       ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(15.0, 40.0, 15.0, 40.0),
-        child: Column(
+      child: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(15.0, 24.0, 15.0, 24.0),
           children: [
             headerWidget(),
 
@@ -62,13 +64,6 @@ class HeaderDrawer extends StatelessWidget {
             SizedBox(height: 24),
 
             DrawerList(
-              name: 'Emotion Detector',
-              icon: Icons.camera_alt_outlined,
-              onPressed: () => onItemPressed(context, index: 4),
-            ),
-            SizedBox(height: 24),
-
-            DrawerList(
                 name: 'Log out',
                 icon: Icons.logout,
                 onPressed: () {
@@ -91,36 +86,37 @@ class HeaderDrawer extends StatelessWidget {
   }
 
 //navigating back and forth from home screen
-  void onItemPressed(BuildContext context, {required int index}) {
-    Navigator.pop(context);
+  Future<void> onItemPressed(BuildContext context, {required int index}) async {
+    final navigator = Navigator.of(context);
+    final googleProvider =
+        Provider.of<GoogleSignInProvider>(context, listen: false);
+    navigator.pop();
     switch (index) {
       case 0:
-        Navigator.push(
-            context, MaterialPageRoute(builder: (context) => MyAccount()));
+        navigator.push(MaterialPageRoute(builder: (context) => MyAccount()));
         break;
 
       case 1:
-        Navigator.push(
-            context, MaterialPageRoute(builder: (context) => My_feedback()));
+        navigator.push(MaterialPageRoute(builder: (context) => My_feedback()));
         break;
 
       case 2:
-        Navigator.push(
-            context, MaterialPageRoute(builder: (context) => const About_us()));
+        navigator
+            .push(MaterialPageRoute(builder: (context) => const About_us()));
         break;
 
       case 3:
-        FirebaseAuth.instance.signOut();
+        await FirebaseAuth.instance.signOut();
+        await googleProvider.logout();
+        final sharedPreferences = await SharedPreferences.getInstance();
+        await sharedPreferences.remove('uid');
+        await sharedPreferences.remove('email');
         print('Logged Out');
-        Navigator.push(
-            context, MaterialPageRoute(builder: (context) => exit(1)));
+        navigator.pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => const LoginScreens()),
+            (route) => false);
         break;
 
-      case 4:
-        print('Working...');
-        Navigator.push(
-            context, MaterialPageRoute(builder: (context) => Upload()));
-        break;
     }
   }
 

@@ -1,30 +1,24 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:reconnect/main.dart';
+import 'package:reconnect/pages/Upload.dart';
+import 'package:reconnect/pages/quizpage.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('upload screen shows its primary actions', (tester) async {
+    await tester.pumpWidget(MaterialApp(home: Upload()));
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    expect(find.text('Select File'), findsOneWidget);
+    expect(find.text('Upload File'), findsOneWidget);
+    expect(find.text('No File Selected'), findsOneWidget);
+  });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+  test('emotion check-in scores answers locally', () {
+    final result = assessEmotionCheckIn({
+      for (var index = 0; index < 10; index++) index: true,
+    });
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(result.difficultFeelingsPercent, 100);
+    expect(result.wellbeingPercent, 0);
+    expect(result.title, contains('heavy'));
   });
 }

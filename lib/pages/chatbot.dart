@@ -11,15 +11,24 @@ class Chatbot extends StatefulWidget {
 }
 
 class _ChatbotState extends State<Chatbot> {
-  late DialogFlowtter dialogFlowtter;
+  DialogFlowtter? dialogFlowtter;
   final TextEditingController _controller = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
 
   List<Map<String, dynamic>> messages = [];
 
   @override
   void initState() {
-    dialogFlowtter = DialogFlowtter();
     super.initState();
+    dialogFlowtter = DialogFlowtter(jsonPath: 'assets/dialog_flow_auth.json');
+  }
+
+  @override
+  void dispose() {
+    dialogFlowtter?.dispose();
+    _controller.dispose();
+    _scrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -32,11 +41,16 @@ class _ChatbotState extends State<Chatbot> {
       body: Container(
           child: Column(
         children: [
-          Expanded(child: MessagesScreen(messages: messages)),
-          SingleChildScrollView(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              color: const Color.fromARGB(255, 43, 165, 139),
+          Expanded(
+              child: MessagesScreen(
+            messages: messages,
+            controller: _scrollController,
+          )),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            color: const Color.fromARGB(255, 43, 165, 139),
+            child: SafeArea(
+              top: false,
               child: Row(children: [
                 Expanded(
                   child: TextField(
@@ -47,6 +61,8 @@ class _ChatbotState extends State<Chatbot> {
                     autofocus: true,
                     cursorColor: Colors.white,
                     controller: _controller,
+                    minLines: 1,
+                    maxLines: 4,
                     style: const TextStyle(color: Colors.white),
                   ),
                 ),
@@ -66,24 +82,47 @@ class _ChatbotState extends State<Chatbot> {
   }
 
   sendMessage(String text) async {
-    if (text.isEmpty) {
+    final messageText = text.trim();
+    if (messageText.isEmpty) {
       print('Message is Empty');
       Fluttertoast.showToast(msg: 'Message is Empty');
     } else {
       setState(() {
-        addMessage(Message(text: DialogText(text: [text])), true);
+        addMessage(messageText, true);
       });
+      _scrollToBottom();
 
-      DetectIntentResponse response = await dialogFlowtter.detectIntent(
-          queryInput: QueryInput(text: TextInput(text: text)));
-      if (response.message == null) return;
-      setState(() {
-        addMessage(response.message!);
-      });
+      try {
+        final response = await dialogFlowtter?.detectIntent(
+            queryInput: QueryInput(text: TextInput(text: messageText)));
+        final reply = response?.message?.text?.text?.join('\n').trim();
+        if (reply == null || reply.isEmpty) {
+          Fluttertoast.showToast(msg: 'No reply received');
+          return;
+        }
+        setState(() {
+          addMessage(reply);
+        });
+        _scrollToBottom();
+      } catch (error) {
+        Fluttertoast.showToast(msg: 'Chatbot reply failed');
+        print('Dialogflow error: $error');
+      }
     }
   }
 
-  addMessage(Message message, [bool isUserMessage = false]) {
-    messages.add({'message': message, 'isUserMessage': isUserMessage});
+  addMessage(String message, [bool isUserMessage = false]) {
+    messages.add({'text': message, 'isUserMessage': isUserMessage});
+  }
+
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_scrollController.hasClients) return;
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+      );
+    });
   }
 }

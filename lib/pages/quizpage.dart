@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:reconnect/pages/charts.dart';
-import '../widgets/firestore.dart';
 
 class Question {
   final String question;
@@ -9,6 +8,56 @@ class Question {
   const Question({
     required this.question,
   });
+}
+
+/// A non-diagnostic, on-device check-in result.
+class EmotionCheckInResult {
+  final double wellbeingPercent;
+  final double difficultFeelingsPercent;
+  final String title;
+  final String message;
+
+  const EmotionCheckInResult({
+    required this.wellbeingPercent,
+    required this.difficultFeelingsPercent,
+    required this.title,
+    required this.message,
+  });
+}
+
+EmotionCheckInResult assessEmotionCheckIn(Map<int, bool> answers) {
+  const symptomQuestionCount = 9;
+  final symptomCount = List.generate(symptomQuestionCount, (offset) => offset + 1)
+      .where((index) => answers[index] == true)
+      .length;
+  final difficultFeelingsPercent = symptomCount / symptomQuestionCount * 100;
+  final wellbeingPercent = 100 - difficultFeelingsPercent;
+
+  if (symptomCount >= 6) {
+    return EmotionCheckInResult(
+      wellbeingPercent: wellbeingPercent,
+      difficultFeelingsPercent: difficultFeelingsPercent,
+      title: 'It sounds like things may feel heavy right now',
+      message:
+          'This check-in is not a diagnosis. Consider talking with someone you trust or a qualified mental-health professional.',
+    );
+  }
+  if (symptomCount >= 3) {
+    return EmotionCheckInResult(
+      wellbeingPercent: wellbeingPercent,
+      difficultFeelingsPercent: difficultFeelingsPercent,
+      title: 'You may be dealing with some difficult feelings',
+      message:
+          'This check-in is not a diagnosis. A little rest, support, and a conversation with someone you trust may help.',
+    );
+  }
+  return EmotionCheckInResult(
+    wellbeingPercent: wellbeingPercent,
+    difficultFeelingsPercent: difficultFeelingsPercent,
+    title: 'Your check-in looks relatively steady',
+    message:
+        'This check-in is not a diagnosis. Keep noticing how you feel and reach out for support whenever you need it.',
+  );
 }
 
 class QuizPage extends StatefulWidget {
@@ -19,10 +68,9 @@ class QuizPage extends StatefulWidget {
 }
 
 class _QuizPageState extends State<QuizPage> {
-  List<Question> Questions = [
-    //1
+  final List<Question> questions = [
     const Question(
-      question: 'What does mental means to you, is it the same as happiness?',
+      question: 'Have you generally felt calm or hopeful recently?',
     ),
     //2
     const Question(
@@ -66,8 +114,7 @@ class _QuizPageState extends State<QuizPage> {
     ),
   ];
 
-  int yes = 0;
-  int no = 0;
+  final Map<int, bool> answers = {};
 
   @override
   Widget build(BuildContext context) {
@@ -80,25 +127,31 @@ class _QuizPageState extends State<QuizPage> {
         ),
         centerTitle: true,
       ),
-      body: Container(
+      body: SafeArea(
         child: ListView.builder(
-          itemCount: Questions.length,
+          padding: const EdgeInsets.only(bottom: 96),
+          itemCount: questions.length,
           itemBuilder: (BuildContext context, int index) {
-            final Question = Questions[index];
+            final question = questions[index];
+            final selectedAnswer = answers[index];
             return Card(
               child: Padding(
                 padding: const EdgeInsets.all(10.0),
                 child: ListTile(
                   title: Text(
-                    Question.question,
+                    question.question,
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   subtitle: TextButton(
-                      onPressed: () => openDialog(),
+                      onPressed: () => openDialog(index),
                       child: Text(
-                        'Answer',
+                        selectedAnswer == null
+                            ? 'Answer'
+                            : selectedAnswer
+                                ? 'Answered: Yes'
+                                : 'Answered: No',
                         style: TextStyle(fontWeight: FontWeight.bold),
                       )),
                   isThreeLine: true,
@@ -117,18 +170,27 @@ class _QuizPageState extends State<QuizPage> {
           ],
         ),
         onPressed: () {
+          if (answers.length < questions.length) {
+            Fluttertoast.showToast(msg: 'Please answer all questions');
+            return;
+          }
+          final result = assessEmotionCheckIn(answers);
           Fluttertoast.showToast(msg: 'Submitted');
           Navigator.push(
-              context, MaterialPageRoute(builder: (context) => Charts()));
-          setState(() {
-            Analysis(yes, no);
-          });
+              context,
+              MaterialPageRoute(
+                  builder: (context) => Charts(
+                        happinessPercent: result.wellbeingPercent,
+                        sadnessPercent: result.difficultFeelingsPercent,
+                        resultTitle: result.title,
+                        resultMessage: result.message,
+                      )));
         },
       ),
     );
   }
 
-  Future openDialog() => showDialog(
+  Future openDialog(int questionIndex) => showDialog(
       context: context,
       builder: (context) => AlertDialog(
             title: Text('Choose answer'),
@@ -138,13 +200,17 @@ class _QuizPageState extends State<QuizPage> {
               children: [
                 TextButton(
                     onPressed: () {
-                      yes = yes + 1;
+                      setState(() {
+                        answers[questionIndex] = true;
+                      });
                       Navigator.pop(context);
                     },
                     child: Text('Yes')),
                 TextButton(
                     onPressed: () {
-                      no = no + 1;
+                      setState(() {
+                        answers[questionIndex] = false;
+                      });
                       Navigator.pop(context);
                     },
                     child: Text('No')),

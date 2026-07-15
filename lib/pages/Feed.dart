@@ -20,90 +20,112 @@ class _FeedState extends State<Feed> {
         FirebaseFirestore.instance.collection('posts').snapshots();
 
     return Scaffold(
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            StreamBuilder<QuerySnapshot>(
-              stream: dataStream,
-              builder: (BuildContext context,
-                  AsyncSnapshot<QuerySnapshot> snapshot) {
-                if (snapshot.hasError) {}
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  CircularProgressIndicator(
-                    color: Colors.black,
-                    semanticsLabel: "loading...",
-                  );
-                }
-                final List storedocs = [];
-                snapshot.data?.docs.map((DocumentSnapshot document) {
-                  Map a = document.data() as Map<String, dynamic>;
-                  storedocs.add(a);
-                  a['id'] = document.id;
-                }).toList();
+      body: StreamBuilder<QuerySnapshot>(
+        stream: dataStream,
+        builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+          if (snapshot.hasError) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(
+                  'Unable to load posts.\n${snapshot.error}',
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            );
+          }
 
-                return Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(
-                      storedocs.length,
-                      (i) => Container(
-                            padding: EdgeInsets.all(20),
-                            margin: EdgeInsets.all(20),
-                            decoration: const BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  Color.fromARGB(255, 161, 161, 161),
-                                  Color.fromARGB(121, 253, 255, 250),
-                                ],
-                                begin: Alignment.bottomLeft,
-                                end: Alignment.topRight,
-                              ),
-                            ),
-                            // color: Color.fromARGB(23, 162, 140, 140),
-                            child: Column(
-                              children: [
-                                Text('User',
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Color.fromARGB(255, 5, 152, 172),
-                                        fontSize: 18)),
-                                const Divider(
-                                  thickness: 1,
-                                  height: 20,
-                                  color: Color.fromARGB(255, 40, 34, 34),
-                                ),
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: CircularProgressIndicator(
+                color: Colors.black,
+                semanticsLabel: "loading...",
+              ),
+            );
+          }
 
-                                //SizedBox(height: 0),
-                                Text(storedocs[i]['text'],
-                                    style: TextStyle(
-                                        //fontWeight: FontWeight.bold,
-                                        fontSize: 18)),
-                                //SizedBox(height: 10),
-                                const Divider(
-                                  thickness: 1,
-                                  height: 20,
-                                  color: Color.fromARGB(255, 40, 34, 34),
-                                ),
+          final posts = [...?snapshot.data?.docs];
+          posts.sort((a, b) {
+            final aData = a.data() as Map<String, dynamic>;
+            final bData = b.data() as Map<String, dynamic>;
+            final aTime = aData['timestamp'];
+            final bTime = bData['timestamp'];
 
-                                IconButton(
-                                    onPressed: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (context) => Comments()),
-                                      );
-                                    },
-                                    icon: Icon(
-                                      Icons.chat_bubble_outline_rounded,
-                                    )),
-                                // SizedBox(height: 10),
-                              ],
-                            ),
+            if (aTime is Timestamp && bTime is Timestamp) {
+              return bTime.compareTo(aTime);
+            }
+            if (aTime is Timestamp) return -1;
+            if (bTime is Timestamp) return 1;
+            return 0;
+          });
+
+          if (posts.isEmpty) {
+            return const Center(
+              child: Text('No posts yet. Share the first thought.'),
+            );
+          }
+
+          return ListView.builder(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            itemCount: posts.length,
+            itemBuilder: (context, i) {
+              final data = posts[i].data() as Map<String, dynamic>;
+              final creator = data['creator']?.toString().trim();
+              final text = data['text']?.toString() ?? '';
+
+              return Container(
+                padding: const EdgeInsets.all(20),
+                margin:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Color.fromARGB(255, 161, 161, 161),
+                      Color.fromARGB(121, 253, 255, 250),
+                    ],
+                    begin: Alignment.bottomLeft,
+                    end: Alignment.topRight,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(creator?.isNotEmpty == true ? creator! : 'User',
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Color.fromARGB(255, 5, 152, 172),
+                            fontSize: 18)),
+                    const Divider(
+                      thickness: 1,
+                      height: 20,
+                      color: Color.fromARGB(255, 40, 34, 34),
+                    ),
+                    Text(text, style: const TextStyle(fontSize: 18)),
+                    const Divider(
+                      thickness: 1,
+                      height: 20,
+                      color: Color.fromARGB(255, 40, 34, 34),
+                    ),
+                    Align(
+                      alignment: Alignment.center,
+                      child: IconButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const Comments()),
+                            );
+                          },
+                          icon: const Icon(
+                            Icons.chat_bubble_outline_rounded,
                           )),
-                );
-              },
-            )
-          ],
-        ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        },
       ),
     );
   }

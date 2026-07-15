@@ -2,7 +2,13 @@ import 'package:flutter/material.dart';
 
 class MessagesScreen extends StatefulWidget {
   final List messages;
-  const MessagesScreen({Key? key, required this.messages}) : super(key: key);
+  final ScrollController controller;
+
+  const MessagesScreen({
+    Key? key,
+    required this.messages,
+    required this.controller,
+  }) : super(key: key);
 
   @override
   _MessagesScreenState createState() => _MessagesScreenState();
@@ -13,43 +19,43 @@ class _MessagesScreenState extends State<MessagesScreen> {
   Widget build(BuildContext context) {
     var w = MediaQuery.of(context).size.width;
     return ListView.separated(
+        controller: widget.controller,
+        padding: const EdgeInsets.only(bottom: 12),
         itemBuilder: (context, index) {
           return Container(
               margin: const EdgeInsets.all(10),
-              child: SingleChildScrollView(
-                child: Row(
-                  mainAxisAlignment: widget.messages[index]['isUserMessage']
-                      ? MainAxisAlignment.end
-                      : MainAxisAlignment.start,
-                  children: [
-                    Container(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 14, horizontal: 14),
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.only(
-                              bottomLeft: const Radius.circular(
-                                20,
-                              ),
-                              topRight: const Radius.circular(20),
-                              bottomRight: Radius.circular(
-                                  widget.messages[index]['isUserMessage']
-                                      ? 0
-                                      : 20),
-                              topLeft: Radius.circular(widget.messages[index]
-                                      ['isUserMessage']
-                                  ? 20
-                                  : 0),
+              child: Row(
+                mainAxisAlignment: widget.messages[index]['isUserMessage']
+                    ? MainAxisAlignment.end
+                    : MainAxisAlignment.start,
+                children: [
+                  Container(
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 14, horizontal: 14),
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.only(
+                            bottomLeft: const Radius.circular(
+                              20,
                             ),
-                            color: widget.messages[index]['isUserMessage']
-                                ? Color.fromARGB(255, 43, 165, 139)
-                                : Color.fromARGB(255, 58, 116, 98)),
-                        constraints: BoxConstraints(maxWidth: w * 2 / 3),
-                        child: Text(
-                          widget.messages[index]['message'].text.text[0],
-                          style: const TextStyle(color: Colors.white),
-                        )),
-                  ],
-                ),
+                            topRight: const Radius.circular(20),
+                            bottomRight: Radius.circular(widget.messages[index]
+                                    ['isUserMessage']
+                                ? 0
+                                : 20),
+                            topLeft: Radius.circular(widget.messages[index]
+                                    ['isUserMessage']
+                                ? 20
+                                : 0),
+                          ),
+                          color: widget.messages[index]['isUserMessage']
+                              ? Color.fromARGB(255, 43, 165, 139)
+                              : Color.fromARGB(255, 58, 116, 98)),
+                      constraints: BoxConstraints(maxWidth: w * 2 / 3),
+                      child: Text(
+                        widget.messages[index]['text'],
+                        style: const TextStyle(color: Colors.white),
+                      )),
+                ],
               ));
         },
         separatorBuilder: (_, i) =>

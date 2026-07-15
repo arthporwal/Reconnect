@@ -6,7 +6,7 @@ Future<void> userSetup(
   CollectionReference users = FirebaseFirestore.instance.collection('Users');
   FirebaseAuth auth = FirebaseAuth.instance;
   String uid = auth.currentUser!.uid.toString();
-  users.add({
+  await users.doc(uid).set({
     'displayName': displayName,
     'uid': uid,
     'Phone': Phone,
@@ -60,10 +60,17 @@ class PostService {
     }).toList();
   }
 
-  Future savePost(text) async {
+  Future savePost(String text) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
     await FirebaseFirestore.instance.collection("posts").add({
       'text': text,
-      'creator': FirebaseAuth.instance.currentUser!.displayName,
+      'creator': user.displayName?.trim().isNotEmpty == true
+          ? user.displayName
+          : user.email ?? user.uid,
+      'creatorId': user.uid,
+      'creatorEmail': user.email,
       'timestamp': FieldValue.serverTimestamp(),
     });
   }

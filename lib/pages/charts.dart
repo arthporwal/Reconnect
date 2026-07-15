@@ -3,7 +3,18 @@ import 'package:pie_chart/pie_chart.dart';
 import 'package:reconnect/pages/home.dart';
 
 class Charts extends StatefulWidget {
-  const Charts({super.key});
+  final double happinessPercent;
+  final double sadnessPercent;
+  final String resultTitle;
+  final String resultMessage;
+
+  const Charts({
+    super.key,
+    required this.happinessPercent,
+    required this.sadnessPercent,
+    required this.resultTitle,
+    required this.resultMessage,
+  });
 
   @override
   State<Charts> createState() => _ChartsState();
@@ -11,11 +22,6 @@ class Charts extends StatefulWidget {
 
 class _ChartsState extends State<Charts> {
   int choiceIndex = 0;
-
-  Map<String, double> dataMap = {
-    "Happiness": 40,
-    "Sadness": 60,
-  };
 
   List<Color> colorList = [
     // Color.fromARGB(255, 230, 222, 111),
@@ -32,33 +38,54 @@ class _ChartsState extends State<Charts> {
         backgroundColor: const Color.fromARGB(255, 58, 116, 98),
         title: const Text('Analysis'),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            PieChart(
-              dataMap: dataMap,
-              chartRadius: MediaQuery.of(context).size.width,
-              colorList: colorList,
-              centerText: 'Analytics',
-            ),
-            SizedBox(height: 60),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.center,
+      body: ListView(
+        padding: const EdgeInsets.symmetric(vertical: 48),
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Column(
               children: [
-                ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                        backgroundColor: Color.fromARGB(255, 36, 182, 121)),
-                    onPressed: () {
-                      Navigator.push(context,
-                          MaterialPageRoute(builder: (context) => Home()));
-                    },
-                    child: Text('Continue'))
+                Text(
+                  widget.resultTitle,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  widget.resultMessage,
+                  textAlign: TextAlign.center,
+                ),
               ],
-            )
-          ],
-        ),
+            ),
+          ),
+          const SizedBox(height: 32),
+          PieChart(
+            dataMap: {
+              "Steady feelings": widget.happinessPercent,
+              "Difficult feelings": widget.sadnessPercent,
+            },
+            chartRadius: MediaQuery.of(context).size.width,
+            colorList: colorList,
+            centerText: 'Analytics',
+            chartValuesOptions: const ChartValuesOptions(
+              showChartValuesInPercentage: true,
+            ),
+          ),
+          SizedBox(height: 60),
+          Center(
+            child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: Color.fromARGB(255, 36, 182, 121)),
+                onPressed: () {
+                  Navigator.push(
+                      context, MaterialPageRoute(builder: (context) => Home()));
+                },
+                child: Text('Continue')),
+          )
+        ],
       ),
     );
   }

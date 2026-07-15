@@ -82,32 +82,30 @@ class _UploadState extends State<Upload> {
         centerTitle: true,
         backgroundColor: Color.fromARGB(255, 58, 116, 98),
       ),
-      body: Container(
-        padding: EdgeInsets.all(32),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ButtonWidget(
-                text: 'Select File',
-                icon: Icons.attach_file,
-                onClicked: selectFile,
-              ),
-              SizedBox(height: 8),
-              Text(
-                fileName,
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-              ),
-              SizedBox(height: 48),
-              ButtonWidget(
-                text: 'Upload File',
-                icon: Icons.cloud_upload_outlined,
-                onClicked: uploadFile,
-              ),
-              SizedBox(height: 20),
-              task != null ? buildUploadStatus(task!) : Container(),
-            ],
-          ),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(32),
+          children: [
+            const SizedBox(height: 80),
+            ButtonWidget(
+              text: 'Select File',
+              icon: Icons.attach_file,
+              onClicked: selectFile,
+            ),
+            SizedBox(height: 8),
+            Text(
+              fileName,
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            ),
+            SizedBox(height: 48),
+            ButtonWidget(
+              text: 'Upload File',
+              icon: Icons.cloud_upload_outlined,
+              onClicked: uploadFile,
+            ),
+            SizedBox(height: 20),
+            task != null ? buildUploadStatus(task!) : Container(),
+          ],
         ),
       ),
     );

@@ -38,7 +38,7 @@ dev_dependencies:
   firebase_auth: ^6.5.6
 
 flutter_icons:
-  image_path: "assets/reconnect.jpg"
+  image_path: "assets/Reconnect.jpg"
   android: true
   ios: true
 
@@ -53,5 +53,6 @@ flutter:
 
   assets:
     - assets/Reconnect.jpg
+    - assets/dialog_flow_auth.json
 
   uses-material-design: true

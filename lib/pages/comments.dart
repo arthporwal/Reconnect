@@ -28,14 +28,13 @@ class _CommentsState extends State<Comments> {
           // style: TextStyle(color: Colors.black),
         ),
       ),
-      body: Container(
+      body: SafeArea(
           child: Column(
         children: [
           Expanded(
             child: SingleChildScrollView(),
           ),
-          SingleChildScrollView(
-            child: Container(
+          Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               color: Colors.white70,
               child: Row(children: [
@@ -58,7 +57,6 @@ class _CommentsState extends State<Comments> {
                     icon: const Icon(Icons.send))
               ]),
             ),
-          )
         ],
       )),
     );

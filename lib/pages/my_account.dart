@@ -1,75 +1,110 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class MyAccount extends StatefulWidget {
+  const MyAccount({super.key});
+
   @override
   State<MyAccount> createState() => _MyAccountState();
 }
 
 class _MyAccountState extends State<MyAccount> {
+  Future<Map<String, dynamic>?> _loadUserProfile(User user) async {
+    final users = FirebaseFirestore.instance.collection('Users');
+    final directDoc = await users.doc(user.uid).get();
+    if (directDoc.exists) {
+      return directDoc.data();
+    }
+
+    final query = await users.where('uid', isEqualTo: user.uid).limit(1).get();
+    if (query.docs.isEmpty) return null;
+    return query.docs.first.data();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Account'),
         centerTitle: true,
-        backgroundColor: Color.fromARGB(255, 58, 116, 98),
+        backgroundColor: const Color.fromARGB(255, 58, 116, 98),
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              SizedBox(height: 50),
-              Image.network(
-                  'https://media.istockphoto.com/vectors/default-profile-picture-avatar-photo-placeholder-vector-illustration-vector-id1223671392?k=20&m=1223671392&s=612x612&w=0&h=lGpj2vWAI3WUT1JeJWm1PRoHT3V15_1pdcTn2szdwQ0=',
-                  cacheHeight: 100,
-                  cacheWidth: 100),
-              SizedBox(height: 50),
-              Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(height: 20),
-                    Text(
-                      "\n\nUser id:  888RECxxxxx121",
-                      style: TextStyle(
-                        color: Colors.red,
-                        fontSize: 20,
-                        // fontWeight: FontWeight.bold,
+      body: SafeArea(
+        child: user == null
+            ? const Center(child: Text('No user is currently signed in.'))
+            : FutureBuilder<Map<String, dynamic>?>(
+                future: _loadUserProfile(user),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  final profile = snapshot.data ?? {};
+                  final displayName =
+                      profile['displayName']?.toString().trim().isNotEmpty ==
+                              true
+                          ? profile['displayName'].toString()
+                          : user.displayName ?? 'Reconnect User';
+                  final email = profile['email']?.toString() ?? user.email;
+                  final phone = profile['Phone']?.toString();
+                  final age = profile['age']?.toString();
+
+                  return ListView(
+                    padding: const EdgeInsets.all(20),
+                    children: [
+                      const SizedBox(height: 30),
+                      CircleAvatar(
+                        radius: 52,
+                        backgroundColor: const Color.fromARGB(255, 58, 116, 98),
+                        backgroundImage: user.photoURL != null
+                            ? NetworkImage(user.photoURL!)
+                            : null,
+                        child: user.photoURL == null
+                            ? const Icon(Icons.person,
+                                color: Colors.white, size: 56)
+                            : null,
                       ),
-                    ),
-                  ]),
-              // Row(
-              //     mainAxisAlignment: MainAxisAlignment.center,
-              //     crossAxisAlignment: CrossAxisAlignment.start,
-              //     children: [
-              //       Text(
-              //         "\nEmail : arxxxx67@gmail.com\n",
-              //         style: TextStyle(
-              //           color: Colors.black,
-              //           fontSize: 20,
-              //           // fontWeight: FontWeight.bold,
-              //         ),
-              //       ),
-              //     ]),
-              // SizedBox(height: 20),
-              // Row(
-              //     mainAxisAlignment: MainAxisAlignment.center,
-              //     crossAxisAlignment: CrossAxisAlignment.start,
-              //     children: [
-              //       Text(
-              //         "Phone no. : 97xxxxxx89",
-              //         style: TextStyle(
-              //           color: Colors.black,
-              //           fontSize: 20,
-              //           // fontWeight: FontWeight.bold,
-              //         ),
-              //       ),
-              //     ]),
-            ],
-          ),
+                      const SizedBox(height: 28),
+                      _InfoTile(label: 'Name', value: displayName),
+                      _InfoTile(label: 'User ID', value: user.uid),
+                      if (email != null)
+                        _InfoTile(label: 'Email', value: email),
+                      if (phone != null)
+                        _InfoTile(label: 'Phone', value: phone),
+                      if (age != null) _InfoTile(label: 'Age', value: age),
+                    ],
+                  );
+                },
+              ),
+      ),
+    );
+  }
+}
+
+class _InfoTile extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _InfoTile({
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: ListTile(
+        tileColor: const Color.fromARGB(24, 58, 116, 98),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        title: Text(
+          label,
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
+        subtitle: Text(value),
       ),
     );
   }
